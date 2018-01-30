@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans    
+      http://www.springframework.org/schema/beans/spring-beans-2.5.xsd   
+      http://www.springframework.org/schema/context   
+      http://www.springframework.org/schema/context/spring-context-2.5.xsd   
+      http://www.springframework.org/schema/aop   
+      http://www.springframework.org/schema/aop/spring-aop-2.5.xsd   
+      http://www.springframework.org/schema/tx   
+      http://www.springframework.org/schema/tx/spring-tx-2.5.xsd">
+
+	<!-- 用注解方法注入bean 上边schemaLocation的三条语句顺序很重要，否则报错 -->
+	<context:annotation-config />
+	<context:component-scan base-package="com" />
+
+	<!-- 数据库连接池 -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close">
+		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+		<property name="url" value="jdbc:mysql://localhost:3306/mydb?useUnicode=true&amp;characterEncoding=UTF-8" />
+		<property name="username" value="root" />
+		<property name="password" value="123456" />
+	</bean>
+
+	<!-- 配置sessionFactory ,数据库配置在hibernate.cfg.xml中-->
+    <!--LocalSessionFactoryBean 加载bean方式 <mapping resource="com/model/User.hbm.xml"/>
+        AnnotationSessionFactoryBean 加载bean方式 <mapping class="com.model.User"/> ,它主要功能是取消了hbm.xml文件
+     -->
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<!-- 配置实体描述文件 -->
+		<property name="mappingResources">
+			<list>
+				<value>com/model/User.hbm.xml</value>
+			</list>
+		</property>
+		<!--扫描com.cuangwu包下以及子包种有 @Service @Controller @Repository @Component  注解的类,一旦发现,则将其纳入到spring容器中管理 
+            此spring.jar必须是 Spring2.5以上版本的，因为，Spring2.5之前org.springframework.orm.hibernate3.LocalSessionFactoryBean类中，
+            并没有 packageToScan 这个属性，只有mappingResuorces这个属性。而packageToScan这个属性正是映射包中的类，而mappingResuorces只是映射某个文件。-->
+		<!-- <property name="packagesToScan" > <list> <value>com.model</value> 
+			</list> </property> -->
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.format_sql">true</prop>
+				<prop key="hibernate.hbn2dd1.auto">update</prop>
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+			</props>
+		</property>
+	</bean>
+	<bean id="hibernateTemplate" class="org.springframework.orm.hibernate3.HibernateTemplate">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+
+	<!-- 配置事务管理器 -->
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="find*" read-only="true" />
+			<tx:method name="add*" propagation="REQUIRED" />
+			<tx:method name="delete*" propagation="REQUIRED" /> 
+            <tx:method name="update*" propagation="REQUIRED" /> 
+		</tx:attributes>
+	</tx:advice>
+	<!-- aop代理设置--> 
+	<aop:config>
+		<aop:pointcut expression="execution(public * com.service..*.*(..))"
+			id="myPointcut" />
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="myPointcut" />
+	</aop:config>
+
+</beans>

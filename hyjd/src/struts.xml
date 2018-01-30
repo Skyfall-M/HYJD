@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN" 
+	"http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+	<constant name="struts.i18n.encoding" value="UTF-8" />
+	<package name="struts2" extends="struts-default" namespace="/">
+	<!-- 配置action当与spring整合,class=bean的名称（如果bean没有指定value，则首写字母要小写））  -->
+		<action name="add" class="userAction" method="addUser" >
+			<result name="success">success.jsp</result>
+			<result name="error">fail.jsp</result>
+		</action>
+		<action name="query" class="userAction" method="queryUser">
+			<result name="success">index.jsp</result>
+		</action>
+		<action name="delete" class="userAction" method="deleteUser">
+			<result name="success">success.jsp</result>
+			<result name="error">fail.jsp</result>
+		</action>
+		<action name="edit" class="userAction" method="editUser">
+			<result name="editUser">editUser.jsp</result>
+			<result name="success">success.jsp</result>
+		</action>
+	</package>
+</struts>
